@@ -10,6 +10,15 @@
 #include "query.h"
 using namespace std;
 
+struct config_t{
+	int r;
+	int t;
+	int l;
+	int m;
+	int a;
+	int f;
+}; 
+
 void usage()
 {
 	cout << "Usage: query query.txt config.txt" << endl;
@@ -31,39 +40,32 @@ void parse_input(string line, float * selectivity, int & n)
 	}
 }
 
-/*
-r = 1
-t = 2
-l = 1
-m = 16
-a = 2
-f = 4
-*/
-void read_config(char * config_filename, int & r, int & t, int & l, int & m, int & a, int & f)
+//TODO: trim
+void read_config(char * config_filename, struct config_t & config)
 {
-	ifstream config(config_filename);
-	if (!config){
+	ifstream config_input(config_filename);
+	if (!config_input){
 		cout << "Error reading config file!" << endl;
 		exit(-1);
 	}
 	string line;
-	while (getline(config,line)){
+	while (getline(config_input,line)){
 		size_t equal_index = line.find('=');
 		if (equal_index ==  string::npos)
 			continue;
 		int rval = atoi(line.substr(equal_index + 1).c_str());
 		string lval = line.substr(0,equal_index - 1);	
 		switch (lval[0]){
-			case 'r': r = rval; break;
-			case 't': t = rval; break;
-			case 'l': l = rval; break;
-			case 'm': m = rval; break;
-			case 'a': a = rval; break;
-			case 'f': f = rval; break;
+			case 'r': config.r = rval; break;
+			case 't': config.t = rval; break;
+			case 'l': config.l = rval; break;
+			case 'm': config.m = rval; break;
+			case 'a': config.a = rval; break;
+			case 'f': config.f = rval; break;
 			default: break;
 		}
 	}
-	config.close();		
+	config_input.close();		
 }
 
 
@@ -74,9 +76,9 @@ int main(int argc, char * * argv)
 		return -1;
 	}
 
-	int r, t, l, m, a, f;
-	read_config(argv[2],r,t,l,m,a,f);	
-//	cout << r << " " << t << " " << l << " " << m << " " << a << " " << f << endl;
+	struct config_t config;
+	read_config(argv[2],config);	
+	cout << config.r << " " << config.t << " " << config.l << " " << config.m << " " << config.a << " " << config.f << endl;
 
 	ifstream input(argv[1]);
 	if (!input)	{
