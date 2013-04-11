@@ -68,6 +68,10 @@ void read_config(char * config_filename, struct config_t & config)
 	config_input.close();		
 }
 
+void query_opt(const float * selectivity,int n, const struct config_t config)
+{
+}
+
 
 int main(int argc, char * * argv)
 {
@@ -78,7 +82,7 @@ int main(int argc, char * * argv)
 
 	struct config_t config;
 	read_config(argv[2],config);	
-	cout << config.r << " " << config.t << " " << config.l << " " << config.m << " " << config.a << " " << config.f << endl;
+//	cout << config.r << " " << config.t << " " << config.l << " " << config.m << " " << config.a << " " << config.f << endl;
 
 	ifstream input(argv[1]);
 	if (!input)	{
@@ -95,7 +99,7 @@ int main(int argc, char * * argv)
 //		for (int j = 0 ; j < n ; ++j)
 //			cout << selectivity[j] << " ";
 //		cout << endl;
-//		query_opt(selectivity,n);				//output the solution for each line	
+		query_opt(selectivity,n,config);				//output the solution for each line	
 	}		
 	input.close();		
 	return 0;
