@@ -1,8 +1,8 @@
-// A branch prediction optimizer
-// Implemented in the spirit of
-//      Ross, Kenneth A. "Selection conditions in main memory." ACM Transactions on Database Systems (TODS) 29.1 (2004): 132-161.
-// Date: Apr 11, 2013
-// Author: Le Chang, Yu Qiao
+/* A branch prediction optimizer
+ Implemented in the spirit of
+      Ross, Kenneth A. "Selection conditions in main memory." ACM Transactions on Database Systems (TODS) 29.1 (2004): 132-161.
+ Date: Apr 11, 2013
+ Author: Le Chang, Yu Qiao*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -101,7 +101,7 @@ struct sub_sol{
 };
 inline float c_metric(const sub_sol &sol,const config_t &config)
 {
-	return  (sol.product_sel-1)/sol.num_ele*config.r+(sol.num_ele-1)*config.l+config.f*sol.num_ele+config.t;
+	return  (sol.product_sel-1)/(sol.num_ele*config.r+(sol.num_ele-1)*config.l+config.f*sol.num_ele+config.t);
 }
 inline float fcost(const sub_sol &sol,const config_t &config)
 {
@@ -111,18 +111,18 @@ inline float min(float a, float b){ return a>b?b:a;}
 /*identify the &-term in the right child that dominate the left by tree traversal*/
 bool d_metric(const sub_sol &sol_j,const sub_sol &sol_i,int i,const sub_sol * sol, const config_t &config){
 	int r_index = i;
-	int l_index= 0;
+	int l_index= i;
 	while(sol[r_index].right_sol_index){
+		l_index= sol[r_index].left_sol_index;
 		r_index = sol[r_index].right_sol_index;
-	    	l_index= sol[r_index].left_sol_index;
-		cout<<"left_index"<<l_index<<endl;
-		cout<<"right_index"<<r_index<<endl;
+		//cout<<"left_index"<<l_index<<endl;
+		//cout<<"right_index"<<r_index<<endl;
 		if(sol_j.product_sel > sol[l_index].product_sel && fcost(sol_j,config) > fcost(sol[l_index],config))
-			return false;
+			return true;
 	}
 	if (sol_j.product_sel > sol[r_index].product_sel && fcost(sol_j,config) > fcost(sol[r_index],config)) 
-		return false;
-	return true;
+		return true;
+	return false;
 }
 
 string pri(int it,int k) {
@@ -130,7 +130,7 @@ string pri(int it,int k) {
 	bool f=true;
 	string ot="";
 	int i=it;
-	cout<<" i and k is "<<it<<" "<<k<<endl;
+	//cout<<" i and k is "<<it<<" "<<k<<endl;
 	while(i){
 		if(i&1){
 			if(f){
@@ -156,46 +156,46 @@ void reconstruct(sub_sol * sol,int _size,int k){
 	while(sol[r_index].right_sol_index){
 		l_index=sol[r_index].left_sol_index;
 		r_index=sol[r_index].right_sol_index;
-		if(sol[l_index].is_no_branch )
-			no_branch |= l_index;
-		else
-		{ 
+		
+		 
 			if(f){
 			branch ="("+ pri(l_index,k)+")"+branch;
 			f=false;
+			//cout<<"i am at branching and"<<endl;
 			}
 			else 
-			{
+			{//	cout<<"i am at branching and 2"<<endl;
 				branch ="("+pri(l_index,k)+")"+" && "+branch;
 			}
-		}
-	}
-      if(sol[r_index].is_no_branch)
+		
+	      }
+      		if(sol[r_index].is_no_branch)
 			no_branch |= r_index;
 		else{
 			branch += pri(r_index,k);
 		}
 		 n_branch=pri(no_branch,k);
-	        cout<<"branch is "<<branch<<endl;
-	        cout<<"no branch is "<<n_branch<<endl;
+	        //cout<<"branch is "<<branch<<endl;
+	        //cout<<"no branch is "<<n_branch<<endl;
 		if(!(branch==""))
 			cout<<"if("+branch+"){"<<endl;
 		if(n_branch==""){
-			cout<<"answer[j]=i"<<endl;
+			cout<<"answer[j++]=i"<<endl;
 			cout<<"}";
 		}
 		else{
-			cout<<"answer[j++]=i"<<endl;
-		        cout<<"("+n_branch+")"<<endl;
+			cout<<"answer[j]=i;"<<endl;
+		        cout<<"j += ("+n_branch+");"<<endl;
 		}
+		 if(!(branch=="")){cout<<"}"<<endl;}
 	return;
 }
 
 void query_opt(const float * selectivity,int k, const struct config_t &config)
-{	cout<< k<<endl;
+{	//cout<< k<<endl;
         if(!(selectivity||k)) return;
         int _size = 1 << k;
-	cout<<"the size:"<<_size<<endl;
+	//cout<<"the size:"<<_size<<endl;
         sub_sol * sol = new sub_sol[_size];
         /*without branching AND*/
         for (int i=1;i<_size;i++){
@@ -209,17 +209,17 @@ void query_opt(const float * selectivity,int k, const struct config_t &config)
                                 size=size>>1;
                                 bit=bit-1;
 				}
-			cout<<sol[i].num_ele<<endl;
-			cout<<sol[i].product_sel<<endl;
+			//cout<<sol[i].num_ele<<endl;
+			//cout<<sol[i].product_sel<<endl;
                      if(config.a>(config.m * min(sol[i].product_sel,1-sol[i].product_sel)+sol[i].product_sel *config.a + config.t))
-                                {     
+                                {    					//cout<<"no branching and is better"<<endl; 
 									sol[i].is_no_branch = false;
                                     sol[i].cost = sol[i].num_ele*config.r+(sol[i].num_ele-1)*config.l+config.f*sol[i].num_ele+config.m * min(sol[i].product_sel,1-sol[i].product_sel)+sol[i].product_sel *config.a + config.t;
 							  }
 					 else       {	sol[i].is_no_branch = true;
                                    sol[i].cost = sol[i].num_ele*config.r+(sol[i].num_ele-1)*config.l+config.f*sol[i].num_ele+config.a;
 						    }
-			cout<<"statistics:"<<i<<" "<<sol[i].num_ele<<" "<<sol[i].product_sel<<" "<<sol[i].cost<<" "<<sol[i].is_no_branch<<endl;
+			//cout<<"statistics:"<<i<<" "<<sol[i].num_ele<<" "<<sol[i].product_sel<<" "<<sol[i].cost<<" "<<sol[i].is_no_branch<<endl;
 			}
 	
 			/*With branching AND*/
@@ -227,28 +227,29 @@ void query_opt(const float * selectivity,int k, const struct config_t &config)
 					for (int j=1;j<_size;j++){ /*j is the index of left child s' */
 						if((i&j)>0||(sol[j].left_sol_index>0)) continue;
 						int size_S = i|j;
-						if((sol[j].product_sel >= sol[sol[i].left_sol_index].product_sel)&&(c_metric(sol[j],config)>c_metric(sol[i],config))) {;}
-				      else if(sol[j].product_sel<=0.5 && d_metric(sol[j],sol[i],i,sol,config))
-							{;}
-						else 		{
-								  float new_cost=fcost(sol[j],config) +config.m*min(sol[j].product_sel,1-sol[j].product_sel)+sol[j].product_sel*sol[i].cost;
-								  if(new_cost<sol[size_S].cost){
-									  sol[size_S].left_sol_index=j;
+					if((sol[j].product_sel >= sol[sol[i].left_sol_index].product_sel)&&(c_metric(sol[j],config)>c_metric(sol[i],config))) {;}
+				      		else if(sol[j].product_sel<=0.5 && d_metric(sol[j],sol[i],i,sol,config))	{;}
+						else 	{
+						  float new_cost=fcost(sol[j],config) +config.m*min(sol[j].product_sel,1-sol[j].product_sel)+sol[j].product_sel*sol[i].cost;
+						  if(new_cost<sol[size_S].cost){
+		           						  sol[size_S].left_sol_index=j;
 								          sol[size_S].right_sol_index=i;
 									  sol[size_S].cost=new_cost;
-									  cout<<"new cost replaced\n";
-									  cout<<j<<" "<<i<<" "<<new_cost<<"\n";
+							//		  cout<<"new cost replaced\n";
+							//		  cout<<j<<" "<<i<<" "<<size_S<<" "<<new_cost<<"\n";
 								}
 							}
-                     }
+                     			}
 				}
 				 std::cout<<"========================================="<<endl;
 				 for (int i=0;i<k;i++) 
 					 cout<<selectivity[i]<<" ";
 				 cout<<endl;
-			     cout<<"-----------------------------------------"<<endl;
-			     reconstruct(sol,_size,k);
+			     	 cout<<"-----------------------------------------"<<endl;
+			     	 reconstruct(sol,_size,k);
+		 		cout<<"-----------------------------------------"<<endl;
 				 cout<<"cost: "<<sol[_size-1].cost<<endl;
+	//			for(int i=0;i<_size;i++) cout<<i<<" "<<sol[i].is_no_branch<<endl;
 				delete [] sol;
 }
 
