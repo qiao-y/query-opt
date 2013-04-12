@@ -18,7 +18,7 @@ struct config_t{
         int a;
         int f;
 };
-
+static bool is_fst=0;
 void usage()
 {
         cout << "Usage: query query.txt config.txt" << endl;
@@ -26,7 +26,7 @@ void usage()
  void parse_input(string line, float * selectivity, int & n)
 {
         n = 0;
-        memset(selectivity,0.0f,MAXN * sizeof(float));
+	memset(selectivity,0.0f,MAXN * sizeof(float));
         while (line.length() > 0){
                 size_t space_index = line.find(' ');
                 if (space_index == string::npos)                //reaches the end of line
@@ -105,6 +105,66 @@ bool d_metric(const sub_sol &sol_j,const sub_sol &sol_i,int i,const sub_sol * so
 			fcost(sol_j,config) > fcost(sol[r_index],config) )
 	return true;
 }
+string pri(int i,int k) {
+	int bits=k;
+	bool f=true;
+	string ot="";
+	while(i){
+		if(i&1){
+			if(f){
+				ot = "t"+std::to_string(bits)+"[o"+std::to_string(bits)+"[i]]"+ot;
+				f=false;
+			}
+			else{
+				ot = "t"+std::to_string(bits)+"[o"+std::to_string(bits)+"[i]] & "+ot;
+			}
+		  }
+		 	i=i>>1;
+			bits=bits-1;
+		}
+	return ot;
+}
+void reconstruct(sub_sol * sol,int _size,int k){
+	int  no_branch;
+	string branch="";
+	string n_branch="";
+	int l_index=_size;
+	int r_index=_size;
+	bool f=true;
+	while(sol[r_index].right_sol_index){
+		l_index=sol[r_index].left_sol_index;
+		r_index=sol[r_index].right_sol_index;
+		if(sol[l_index].is_no_branch )
+			no_branch |= no_branch;
+		else
+		{ 
+			if(f){
+			branch ="("+ pri(l_index,k)+")"+branch;
+			f=false;
+			}
+			else 
+			{
+				branch ="("+pri(l_index,k)+")"+" && "+branch;
+			}
+		}
+	}
+      if(sol[r_index].is_no_branch)
+			no_branch |= no_branch;
+		else{
+			branch += pri(l_index,k);
+	        n_branch=pri(no_branch,k);
+		}
+		cout<<"if("+branch+"){"<<endl;
+		if(n_branch==""){
+			cout<<"answer[j++]=i"<<endl;
+			cout<<"}";
+		}
+		else{
+			cout<<"answer[j]=i"<<endl;
+			cout<<"("+n_branch+")";
+		}
+	return;
+}
 
 void query_opt(const float * selectivity,int k, const struct config_t &config)
 {
@@ -146,26 +206,14 @@ void query_opt(const float * selectivity,int k, const struct config_t &config)
 						}
                      }
 				}
-				reconstruct(sol,_size);
-}
-void reconstruct(sub_sol * sol,int _size){
-	string no_branch;
-	string branch;
-	int l_index=_size;
-	int r_index=_size;
-	while(sol[r_index].right_sol_index){
-		l_index=sol[r_index].left_sol_index;
-		r_index=sol[r_index].right_sol_index;
-		if(sol[l_index].is_no_branch )
-			no_branch = no_branch;
-		else
-			branch = branch;
-	}
-      if(sol[r_index].is_no_branch)
-			no_branch = no_branch;
-		else
-			branch = branch;
-	return;
+				 std::cout<<"========================================="<<endl;
+				 for (int i=0;i<k;i++) 
+					 cout<<std::to_string(selectivity[i])<<" ";
+				 cout<<endl;
+			     cout<<"-----------------------------------------"<<endl;
+			     reconstruct(sol,_size,k);
+				 cout<<"cost: "<<std::to_string(sol[_size].cost)<<endl;
+				delete [] sol;
 }
 
 int main(int argc, char * * argv)
@@ -199,4 +247,3 @@ int main(int argc, char * * argv)
         input.close();
         return 0;
 }
-
