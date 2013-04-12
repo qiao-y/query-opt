@@ -3,6 +3,7 @@
 //      Ross, Kenneth A. "Selection conditions in main memory." ACM Transactions on Database Systems (TODS) 29.1 (2004): 132-161.
 // Date: Apr 11, 2013
 // Author: Le Chang, Yu Qiao
+#include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
@@ -10,6 +11,7 @@
 #include "query.h"
 using namespace std;
 #define min(a,b) a>b?b:a
+
 struct config_t{
         int r;
         int t;
@@ -18,16 +20,17 @@ struct config_t{
         int a;
         int f;
 };
-static bool is_fst=0;
+
 void usage()
 {
         cout << "Usage: query query.txt config.txt" << endl;
 }
- void parse_input(string line, float * selectivity, int & n)
+
+void parse_input(string line, float * selectivity, int & n)
 {
-        n = 0;
+    n = 0;
 	memset(selectivity,0.0f,MAXN * sizeof(float));
-        while (line.length() > 0){
+    while (line.length() > 0){
                 size_t space_index = line.find(' ');
                 if (space_index == string::npos)                //reaches the end of line
                         space_index = line.length();
@@ -36,6 +39,20 @@ void usage()
                 selectivity[n++] = value;
                 line.erase(0,space_index+1);
         }
+}
+
+string to_string(int x)
+{
+        char buffer[1024];
+        snprintf(buffer,1024,"%d",x);
+        return string(buffer);
+}
+
+string to_string(float x)
+{
+        char buffer[1024];
+        snprintf(buffer,1024,"%.2f",x);
+        return string(buffer);
 }
 
 //TODO: trim
@@ -95,16 +112,13 @@ bool d_metric(const sub_sol &sol_j,const sub_sol &sol_i,int i,const sub_sol * so
 	int r_index = i;
 	int l_index= 0;
 	while(sol[r_index].right_sol_index){
-		int r_index = sol_i.right_sol_index;
-	    int l_index= sol_i.left_sol_index;
-		if(sol_j.product_sel > sol[l_index].product_sel &&
-			fcost(sol_j,config) > fcost(sol[l_index],config) )
-			return false;
+		r_index = sol_i.right_sol_index;
+	    l_index= sol_i.left_sol_index;
+		return !(sol_j.product_sel > sol[l_index].product_sel && fcost(sol_j,config) > fcost(sol[l_index],config));
 	}
-	if(sol_j.product_sel > sol[r_index].product_sel &&
-			fcost(sol_j,config) > fcost(sol[r_index],config) )
-	return true;
+	return (sol_j.product_sel > sol[r_index].product_sel && fcost(sol_j,config) > fcost(sol[r_index],config));
 }
+
 string pri(int i,int k) {
 	int bits=k;
 	bool f=true;
@@ -112,11 +126,11 @@ string pri(int i,int k) {
 	while(i){
 		if(i&1){
 			if(f){
-				ot = "t"+std::to_string(bits)+"[o"+std::to_string(bits)+"[i]]"+ot;
+				ot = "t"+to_string(bits)+"[o"+to_string(bits)+"[i]]"+ot;
 				f=false;
 			}
 			else{
-				ot = "t"+std::to_string(bits)+"[o"+std::to_string(bits)+"[i]] & "+ot;
+				ot = "t"+to_string(bits)+"[o"+to_string(bits)+"[i]] & "+ot;
 			}
 		  }
 		 	i=i>>1;
@@ -208,11 +222,11 @@ void query_opt(const float * selectivity,int k, const struct config_t &config)
 				}
 				 std::cout<<"========================================="<<endl;
 				 for (int i=0;i<k;i++) 
-					 cout<<std::to_string(selectivity[i])<<" ";
+					 cout<<to_string(selectivity[i])<<" ";
 				 cout<<endl;
 			     cout<<"-----------------------------------------"<<endl;
 			     reconstruct(sol,_size,k);
-				 cout<<"cost: "<<std::to_string(sol[_size].cost)<<endl;
+				 cout<<"cost: "<<to_string(sol[_size].cost)<<endl;
 				delete [] sol;
 }
 
