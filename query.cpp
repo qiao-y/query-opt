@@ -159,13 +159,13 @@ void reconstruct(sub_sol * sol,int _size,int k){
 		
 		 
 			if(f){
-			branch ="("+ pri(l_index,k)+")"+branch;
+			branch =branch+"("+ pri(l_index,k)+")";
 			f=false;
 			//cout<<"i am at branching and"<<endl;
 			}
 			else 
 			{//	cout<<"i am at branching and 2"<<endl;
-				branch ="("+pri(l_index,k)+")"+" && "+branch;
+				branch =branch+" && "+ "("+pri(l_index,k)+")";
 			}
 		
 	      }
