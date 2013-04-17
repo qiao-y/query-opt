@@ -1,0 +1,32 @@
+-----------------------------------------------------------------------------------------------------------
+Team Members:
+
+Le Chang (lc2879)
+Yu Qiao (yq2145)
+-----------------------------------------------------------------------------------------------------------
+Usage: 
+
+make
+./stage2.sh query.txt config.txt
+
+The first argument is the query file, and the second argument is the configuration file.
+
+-----------------------------------------------------------------------------------------------------------
+Files Description:
+
+Makefile: makefile for the project
+README:  This readme file
+config.txt: Configuration file containing parameters needed by the program
+query.txt:  A sample query file
+out.txt: The output file for sample query
+query.cpp: Query optimizer implementation file
+query.h: Query optimizer header file
+stage2.sh: shell script to invoke the program
+
+-----------------------------------------------------------------------------------------------------------
+Implementation Description:
+
+First we parse the input file, storing the parameters and selectivities in the array. Then we perform a dynamic programming to solve the optimal problem, as specified in section of [1]. After calculating the actual cost, we reconstruct the solution by looking the sol array composed earlier.
+
+[1] Ross, Kenneth A. "Selection conditions in main memory." ACM Transactions on Database Systems (TODS) 29.1 (2004): 132-161. 
+
