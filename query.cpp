@@ -83,11 +83,12 @@ void read_config(char * config_filename, struct config_t & config)
         }
         config_input.close();
 }
+/*Node information*/
 struct sub_sol{
         int num_ele;
         float product_sel;
         float cost;
-        bool is_no_branch;
+        bool is_no_branch;/*no branch used or not*/
         int left_sol_index;
         int right_sol_index;
 		sub_sol(){
@@ -124,7 +125,7 @@ bool d_metric(const sub_sol &sol_j,const sub_sol &sol_i,int i,const sub_sol * so
 		return true;
 	return false;
 }
-
+/*print the & term, if there are multiple iterms in & term, add () to protect the integrity*/
 string pri(int it,int k) {
 	int bits=k;
 	bool f=true;
@@ -150,6 +151,7 @@ string pri(int it,int k) {
 		return ot;
 	return "("+ot+")";
 }
+/*reconstruct the solution by recursive calls to solve the right child*/
 string reconstruct(sub_sol * sol,int _size,int k,int &no_branch){
 	int r_index=_size;
 	if(sol[r_index].right_sol_index==0) {
@@ -175,7 +177,7 @@ string reconstruct(sub_sol * sol,int _size,int k,int &no_branch){
 			return branch;
 
 }
-
+/*query implementation using DP*/
 void query_opt(const float * selectivity,int k, const struct config_t &config)
 {	//cout<< k<<endl;
         if(!(selectivity||k)) return;
