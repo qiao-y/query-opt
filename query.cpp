@@ -130,6 +130,7 @@ string pri(int it,int k) {
 	bool f=true;
 	string ot="";
 	int i=it;
+	int num_ele=0;
 	//cout<<" i and k is "<<it<<" "<<k<<endl;
 	while(i){
 		if(i&1){
@@ -140,55 +141,39 @@ string pri(int it,int k) {
 			else{
 				ot = "t"+to_string(bits)+"[o"+to_string(bits)+"[i]] & "+ot;
 			}
+			++num_ele;
 		  }
 		 	i=i>>1;
 			bits=bits-1;
 		}
-	return ot;
+	if(num_ele==1)
+		return ot;
+	return "("+ot+")";
 }
-void reconstruct(sub_sol * sol,int _size,int k){
-	int  no_branch=0;
-	string branch="";
-	string n_branch="";
-	int l_index=_size-1;
-	int r_index=_size-1;
-	bool f=true;
-	while(sol[r_index].right_sol_index){
-		l_index=sol[r_index].left_sol_index;
-		r_index=sol[r_index].right_sol_index;
-		
-		 
-			if(f){
-			branch =branch+"("+ pri(l_index,k)+")";
-			f=false;
-			//cout<<"i am at branching and"<<endl;
+string reconstruct(sub_sol * sol,int _size,int k,int &no_branch){
+	int r_index=_size;
+	if(sol[r_index].right_sol_index==0) {
+		if(sol[r_index].is_no_branch){
+                        no_branch |= r_index;
+			return "";
 			}
-			else 
-			{//	cout<<"i am at branching and 2"<<endl;
-				branch =branch+" && "+ "("+pri(l_index,k)+")";
+                else{
+                        cout<<"I am not supposed to be here in this set of configuration"<<endl;
+                        return pri(r_index,k);
+	                }
+		}
+	 string branch="";
+	 int	l_index=sol[r_index].left_sol_index;
+	 	r_index=sol[r_index].right_sol_index;
+		string right= reconstruct(sol,r_index,k,no_branch);
+			if(right==""){
+				branch = pri(l_index,k);
 			}
-		
+			else{
+				branch= "("+pri(l_index,k) +" && "+ right+")";
 	      }
-      		if(sol[r_index].is_no_branch)
-			no_branch |= r_index;
-		else{
-			branch += pri(r_index,k);
-		}
-		 n_branch=pri(no_branch,k);
-	        //cout<<"branch is "<<branch<<endl;
-	        //cout<<"no branch is "<<n_branch<<endl;
-		if(!(branch==""))
-			cout<<"if("+branch+"){"<<endl;
-		if(n_branch==""){
-			cout<<"answer[j++]=i"<<endl;
-			cout<<"}";
-		}
-		else{
-			cout<<"answer[j]=i;"<<endl;
-		        cout<<"j += ("+n_branch+");"<<endl;
-		}
-		 if(!(branch=="")){cout<<"}"<<endl;}
-	return;
+			return branch;
+
 }
 
 void query_opt(const float * selectivity,int k, const struct config_t &config)
@@ -246,7 +231,23 @@ void query_opt(const float * selectivity,int k, const struct config_t &config)
 					 cout<<selectivity[i]<<" ";
 				 cout<<endl;
 			     	 cout<<"-----------------------------------------"<<endl;
-			     	 reconstruct(sol,_size,k);
+			     	int no_branch=0; 
+				string branch= reconstruct(sol,_size-1,k,no_branch);
+				string  n_branch=pri(no_branch,k);
+                //cout<<"branch is "<<branch<<endl;
+                //cout<<"no branch is "<<n_branch<<endl;
+                if(!(branch==""))
+                        cout<<"if"+branch+"{"<<endl;
+                if(n_branch==""){
+                        cout<<"	  answer[j++]=i"<<endl;
+                        cout<<"}";
+                }
+                else{
+                        cout<<"	  answer[j]=i;"<<endl;
+                        cout<<"	  j += "+n_branch+";"<<endl;
+                }
+                 if(!(branch=="")){cout<<"}"<<endl;}
+
 		 		cout<<"-----------------------------------------"<<endl;
 				 cout<<"cost: "<<sol[_size-1].cost<<endl;
 	//			for(int i=0;i<_size;i++) cout<<i<<" "<<sol[i].is_no_branch<<endl;
